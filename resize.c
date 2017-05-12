@@ -120,17 +120,30 @@ int main(int argc, char* argv[])
                 track++;
             }
         }
+        
+        // skip over padding, if any
+        fseek(inptr, padding, SEEK_CUR);
 
-        fclose(outptr);
+        // write RGB triple to outfile
+        for(int rgb = 0; rgb < size; rgb++)
+        {
+            fwrite((buffer), sizeof(RGBTRIPLE), bi.biWidth, outptr);
 
-        fclose(inptr);
-
-        fprintf(stderr, "Unsupported file format.\n");
-
-        return 4;
+            // write padding to outfile
+            for (int k = 0; k < new_padding; k++)
+            {
+                fputc(0x00, outptr);
+            }
+        }        
 
     }
-    
 
-    
+    fclose(outptr);
+
+    fclose(inptr);
+
+    fprintf(stderr, "Unsupported file format.\n");
+
+    return 4;
+
 }
