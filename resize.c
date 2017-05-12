@@ -66,6 +66,31 @@ int main(int argc, char* argv[])
 
         bi.biBitCount != 24 || bi.biCompression != 0)
     {
+        // create variables for original width and height
+        int Width = bi.biWidth;
+        int Height = bi.biHeight;
+
+        // update width and height
+            bi.biWidth = bi.biWidth * size;
+        bi.biHeight = bi.biHeight * size;
+    
+        // determine padding for scanlines
+        int padding =  (4 - (Width * sizeof(RGBTRIPLE)) % 4) % 4;
+        int new_padding =  (4 - (bi.biWidth * sizeof(RGBTRIPLE)) % 4) % 4;
+    
+        // update image size
+        bi.biSizeImage = abs(bi.biHeight) * (
+        (bi.biWidth * sizeof (RGBTRIPLE)) + new_padding);
+
+        // update file size
+        bf.bfSize = bi.biSizeImage + 
+        sizeof (BITMAPFILEHEADER) + sizeof (BITMAPINFOHEADER); 
+    
+        // write outfile's BITMAPFILEHEADER
+        fwrite(&bf, sizeof(BITMAPFILEHEADER), 1, outptr);
+    
+        // write outfile's BITMAPINFOHEADER
+        fwrite(&bi, sizeof(BITMAPINFOHEADER), 1, outptr);
 
         fclose(outptr);
 
@@ -75,7 +100,8 @@ int main(int argc, char* argv[])
 
         return 4;
 
-    } 
+    }
+    
 
     
 }
