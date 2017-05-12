@@ -66,31 +66,60 @@ int main(int argc, char* argv[])
 
         bi.biBitCount != 24 || bi.biCompression != 0)
     {
-        // create variables for original width and height
-        int Width = bi.biWidth;
-        int Height = bi.biHeight;
+        fclose(outptr);
+        fclose(inptr);
+        fprintf(stderr, "Unsupported file format.\n");
+        return 4;
+    }
 
-        // update width and height
-            bi.biWidth = bi.biWidth * size;
-        bi.biHeight = bi.biHeight * size;
-    
-        // determine padding for scanlines
-        int padding =  (4 - (Width * sizeof(RGBTRIPLE)) % 4) % 4;
-        int new_padding =  (4 - (bi.biWidth * sizeof(RGBTRIPLE)) % 4) % 4;
-    
-        // update image size
-        bi.biSizeImage = abs(bi.biHeight) * (
-        (bi.biWidth * sizeof (RGBTRIPLE)) + new_padding);
+    // create variables for original width and height
+    int Width = bi.biWidth;
+    int Height = bi.biHeight;
 
-        // update file size
-        bf.bfSize = bi.biSizeImage + 
-        sizeof (BITMAPFILEHEADER) + sizeof (BITMAPINFOHEADER); 
+    // update width and height
+    bi.biWidth = bi.biWidth * size;
+    bi.biHeight = bi.biHeight * size;
     
-        // write outfile's BITMAPFILEHEADER
-        fwrite(&bf, sizeof(BITMAPFILEHEADER), 1, outptr);
+    // determine padding for scanlines
+    int padding =  (4 - (Width * sizeof(RGBTRIPLE)) % 4) % 4;
+    int new_padding =  (4 - (bi.biWidth * sizeof(RGBTRIPLE)) % 4) % 4;
+
+    // update image size
+    bi.biSizeImage = abs(bi.biHeight) * (
+    (bi.biWidth * sizeof (RGBTRIPLE)) + new_padding);
+
+    // update file size
+    bf.bfSize = bi.biSizeImage + 
+    sizeof (BITMAPFILEHEADER) + sizeof (BITMAPINFOHEADER); 
     
-        // write outfile's BITMAPINFOHEADER
-        fwrite(&bi, sizeof(BITMAPINFOHEADER), 1, outptr);
+    // write outfile's BITMAPFILEHEADER
+    fwrite(&bf, sizeof(BITMAPFILEHEADER), 1, outptr);
+
+    // write outfile's BITMAPINFOHEADER
+    fwrite(&bi, sizeof(BITMAPINFOHEADER), 1, outptr);
+        
+    // iterate over infile's scanlines
+    for (int i = 0, biHeight = abs(Height); i < biHeight; i++)
+    {
+        int track = 0;
+
+        // iterate over pixels in scanline
+        for (int j = 0; j < Width; j++)
+        {
+
+            // temporary storage
+            RGBTRIPLE triple;
+
+            // read RGB triple from infile
+            fread(&triple, sizeof(RGBTRIPLE), 1, inptr);
+
+            // write pixel to buffer n times
+            for(int count = 0; count < size; count++)
+            {
+                *(buffer + (track)) = triple;
+                track++;
+            }
+        }
 
         fclose(outptr);
 
